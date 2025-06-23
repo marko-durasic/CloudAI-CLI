@@ -1,49 +1,61 @@
 # CloudAI-CLI
 
-> **Ask your AWS account a question – get the answer in seconds.**
+> **[Work in Progress]** Ask questions about your AWS infrastructure, get answers from a local-first AI.
 
-CloudAI-CLI is a **single-binary Go tool** that turns plain‑English prompts into AWS SDK calls, revealing live infrastructure topology *and* high‑level cost drivers.  
+CloudAI-CLI is a single-binary Go tool that uses a **local-first AI** to answer natural language questions about your cloud infrastructure. It works by scanning your Infrastructure as Code (IaC) files to build a knowledge base, ensuring privacy and accuracy.
+
 No more hunting through consoles or memorising `aws cli` flags.
 
 ---
 
-## ✨ Why CloudAI-CLI?
+## 🚀 Core Concept (Scan then Ask)
 
-| Pain today                                                                  | CloudAI-CLI solution                                              |
-|-----------------------------------------------------------------------------|-------------------------------------------------------------------|
-| "Which Lambda handles this API path?" takes many clicks in the console.     | `cloudai "What Lambda backs GET /users on prod-api?"`             |
-| Hard to see all triggers (SQS, cron, API GW) for a function.                | `cloudai "What triggers the process-order Lambda?"`               |
-| Cost Explorer UI feels slow & clunky.                                       | `cloudai "Top 3 services by cost last 7 days"`                    |
+The workflow is designed to be private, fast, and developer-friendly:
 
-_All v0.1 operations are **read‑only** for total safety._
+1.  **Scan:** You run `cloudai scan` in your IaC project directory (e.g., CDK, Terraform). The tool parses your infrastructure definition and saves it to a local `.cloudai/cache.json` file. This step **does not** require AWS credentials.
+2.  **Ask:** You ask any question about the scanned infrastructure, like `cloudai "What is the runtime of the main Lambda?"`. The tool uses the local cache and a local LLM (like Ollama) to give you an answer, without sending your data to a third-party service.
+
+_Live AWS account scanning will be added as a fallback option in a future version._
 
 ---
 
-## 🚀 Key features (v0.1)
+## ⚡ Quick Start
 
-### Infrastructure graph
+```bash
+# 1. Scan your project to build a knowledge base
+# (This example uses the included demo project)
+cd demo-cdk
+cloudai scan
 
-1. **API Gateway → Lambda lookup**
+# 2. Ask any question about the infrastructure
+cloudai "What AWS region is this stack deployed to?"
+cloudai "What is the runtime of the cloudai-demo-hello function?"
+```
 
-   ```bash
-   cloudai "Which Lambda handles GET /users on prod-api?"
-   ```
+---
 
-2. **Lambda trigger inspector**
+## 🧪 Demo Setup
 
-   ```bash
-   cloudai "What triggers the process-order Lambda?"
-   ```
+To test the tool, you can use the included CDK demo project.
 
-### FinOps lite
+```bash
+# Navigate to the demo directory
+cd demo-cdk
 
-3. **Top spenders**
+# Install CDK dependencies
+npm install
 
-   ```bash
-   cloudai "Top 3 services by cost last 7 days"
-   ```
+# Deploy the demo stack to your AWS account
+# (Requires AWS credentials to be configured)
+npx cdk deploy
 
-Use `--json` for automation pipelines and `--plan` to print remediation scripts (never executed).
+# Now you can scan and ask questions as shown in the Quick Start
+cloudai scan
+cloudai "Which Lambda handles GET /hello on cloudai-demo-api?"
+
+# Clean up when you're done
+npx cdk destroy
+```
 
 ---
 
@@ -51,98 +63,48 @@ Use `--json` for automation pipelines and `--plan` to print remediation scripts 
 
 ```bash
 # Requires Go ≥ 1.22
-go install github.com/<your-user>/cloudai@latest
+go install github.com/marko-durasic/CloudAI-CLI@latest
 
-# Or grab a pre-built binary (macOS, Linux, Windows) from the Releases page
+# Or grab a pre-built binary from the Releases page (coming soon)
 ```
 
 _Add an alias for speed_: `alias cai="cloudai"`
 
 ---
 
-## ⚡ Quick start
-
-```bash
-# Map API path to its Lambda
-cai "Which Lambda backs GET /users on prod-api"
-
-# List triggers for a Lambda
-cai "What triggers process-order Lambda?"
-
-# Show biggest spenders (JSON for jq)
-cai --json "Top 3 services by cost last 7 days" | jq .
-```
-
----
-
-## 🧪 Demo Setup
-
-Don't have AWS resources to test with? No problem! We provide a minimal CDK stack to create demo resources.
-
-### Option 1: Quick Demo Setup
-```bash
-# Set up AWS credentials and verify access
-cloudai setup
-
-# Deploy demo resources (API Gateway + Lambda)
-cd demo-cdk
-npm install
-npx cdk deploy
-
-# Test with CloudAI-CLI
-cloudai "Which Lambda handles GET /hello on cloudai-demo-api?"
-
-# Clean up when done
-npx cdk destroy
-```
-
-### Option 2: Manual Setup
-If you prefer to create resources manually, see the [demo-cdk/README.md](demo-cdk/README.md) for detailed instructions.
-
----
-
 ## 🗺 Roadmap
 
-| Version | Highlights                                                                                           |
-|---------|-------------------------------------------------------------------------------------------------------|
-| **v0.1** | `infra.apigw_to_lambda` · `infra.lambda_triggers` · `cost.top` (read-only)                            |
-| v0.2    | S3 storage-class recommendations · Reserved/Spot purchase planner                                     |
-| v0.3    | `--apply` mode with IAM guard-rails · Slack / VS Code extensions                                      |
-| v1.0    | Multi-cloud back-ends (GCP, Azure)                                                                    |
+| Version   | Highlights                                                                                               |
+|-----------|----------------------------------------------------------------------------------------------------------|
+| **v0.1**  | **WIP:** Local-first `scan` for CDK · RAG pipeline for Q&A with Ollama/OpenAI support.                      |
+| v0.2      | Add support for Terraform scanning · Fallback to live AWS scan · Cost analysis features.                   |
+| v0.3      | `--apply` mode with IAM guard-rails · Deeper resource analysis (e.g., S3 storage classes).               |
+| v1.0      | Multi-cloud back-ends (GCP, Azure) · CI/CD integration.                                                    |
 
 ---
 
 ## 📦 Tech stack
 
-| Layer      | Choice                          |
-|------------|---------------------------------|
-| Language   | Go 1.22                         |
-| CLI        | Cobra + Viper                   |
-| LLM        | OpenAI GPT-4o (default) / Ollama|
-| AWS access | AWS SDK v2                      |
-| Tables     | olekukonko/tablewriter          |
-| CI/CD      | GitHub Actions + Goreleaser     |
-
-Static binary size ≈ 11 MB (Darwin arm64).
+| Layer      | Choice                                       |
+|------------|----------------------------------------------|
+| Language   | Go 1.22                                      |
+| CLI        | Cobra + Viper                                |
+| LLM        | Ollama (local-first) / OpenAI GPT-4o (fallback) |
+| IaC Parser | Native Go (for now)                          |
+| CI/CD      | GitHub Actions + Goreleaser (planned)        |
 
 ---
 
 ## 🤝 Contributing
 
-We welcome PRs! Pick a `good first issue` or propose a new intent.
-
-```bash
-cloudai "Add support for cost anomalies"
-```
-
-See **CONTRIBUTING.md** for setup details.
+We welcome PRs! Pick an issue or propose a new feature. See **CONTRIBUTING.md** for setup details.
 
 ---
 
 ## 📝 License
 
-MIT – free for personal and commercial use.
+MIT
 
 ---
 
-_CloudAI-CLI – conversational visibility for your AWS architecture._
+_CloudAI-CLI – conversational visibility for your cloud architecture._
