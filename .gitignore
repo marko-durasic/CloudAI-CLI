@@ -1,0 +1,9 @@
+# Go binaries
+CloudAI-CLI
+
+# Node / CDK
+demo-cdk/node_modules/
+demo-cdk/cdk.out/
+
+# CloudAI cache
+.cloudai/ 
