@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudAI-CLI Ollama GPU Server on EC2'
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: g4dn.xlarge
+    AllowedValues:
+      - g4dn.xlarge    # 4 vCPU, 16GB RAM, 1x T4 GPU - $0.526/hr
+      - g4dn.2xlarge   # 8 vCPU, 32GB RAM, 1x T4 GPU - $0.752/hr
+      - g5.xlarge      # 4 vCPU, 16GB RAM, 1x A10G GPU - $1.006/hr
+    Description: EC2 instance type with GPU support
+  
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair for SSH access
+  
+  AllowedCIDR:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR block allowed to access Ollama API (use your IP/32 for security)
+
+Resources:
+  # Security Group
+  OllamaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Ollama server
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AllowedCIDR
+          Description: SSH access
+        - IpProtocol: tcp
+          FromPort: 11434
+          ToPort: 11434
+          CidrIp: !Ref AllowedCIDR
+          Description: Ollama API access
+      Tags:
+        - Key: Name
+          Value: cloudai-ollama-sg
+
+  # IAM Role for EC2 instance
+  OllamaInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Tags:
+        - Key: Name
+          Value: cloudai-ollama-role
+
+  OllamaInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref OllamaInstanceRole
+
+  # EC2 Instance
+  OllamaInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0f6d76bf212f00b86  # Ubuntu 22.04 LTS us-west-2
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
+      SecurityGroupIds:
+        - !Ref OllamaSecurityGroup
+      IamInstanceProfile: !Ref OllamaInstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp3
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+          
+          echo "🚀 CloudAI-CLI Ollama Setup Starting..."
+          
+          # Update system
+          apt update && apt upgrade -y
+          
+          # Install NVIDIA drivers
+          apt install -y ubuntu-drivers-common
+          ubuntu-drivers autoinstall
+          
+          # Install Ollama
+          curl -fsSL https://ollama.com/install.sh | sh
+          
+          # Configure Ollama to accept external connections
+          mkdir -p /etc/systemd/system/ollama.service.d
+          cat > /etc/systemd/system/ollama.service.d/override.conf << EOF
+          [Service]
+          Environment="OLLAMA_HOST=0.0.0.0:11434"
+          EOF
+          
+          # Start Ollama
+          systemctl daemon-reload
+          systemctl enable ollama
+          systemctl start ollama
+          
+          # Wait for service to start
+          sleep 10
+          
+          # Pull models
+          echo "📥 Downloading AI models..."
+          runuser -l ubuntu -c 'ollama pull llama3.2:3b'
+          runuser -l ubuntu -c 'ollama pull phi3:mini'
+          runuser -l ubuntu -c 'ollama pull llama3.2:1b'
+          
+          # Configure firewall
+          ufw allow 11434/tcp
+          ufw allow 22/tcp
+          ufw --force enable
+          
+          # Create status file
+          echo "✅ CloudAI-CLI Ollama Server Ready!" > /home/ubuntu/setup-complete.txt
+          echo "🌐 API URL: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):11434" >> /home/ubuntu/setup-complete.txt
+          chown ubuntu:ubuntu /home/ubuntu/setup-complete.txt
+          
+          echo "🎉 Setup complete!"
+      Tags:
+        - Key: Name
+          Value: cloudai-ollama-server
+
+Outputs:
+  InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref OllamaInstance
+    
+  PublicIP:
+    Description: Public IP address
+    Value: !GetAtt OllamaInstance.PublicIp
+    
+  OllamaURL:
+    Description: Ollama API URL
+    Value: !Sub 'http://${OllamaInstance.PublicIp}:11434'
+    
+  SSHCommand:
+    Description: SSH command to connect
+    Value: !Sub 'ssh -i ${KeyPairName}.pem ubuntu@${OllamaInstance.PublicIp}'
+    
+  CloudAIConfig:
+    Description: Environment variable for CloudAI-CLI
+    Value: !Sub 'export OLLAMA_URL=http://${OllamaInstance.PublicIp}:11434' 

@@ -20,6 +20,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.36 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.31.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.36.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockruntime v1.30.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.51.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.7.4 // indirect
@@ -27,6 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.72.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.81.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemakerruntime v1.33.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.25.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.34.0 // indirect

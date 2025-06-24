@@ -1,5 +1,10 @@
 # Go binaries
 CloudAI-CLI
+cloudai
+
+# AWS keys and credentials
+*.pem
+*.key
 
 # Node / CDK
 demo-cdk/node_modules/
