@@ -98,8 +98,10 @@ var setupCmd = &cobra.Command{
 
 This command will now verify your credentials by listing your Lambda functions.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("\n=== CloudAI-CLI AWS Setup Guide ===\n")
-		fmt.Println("1. Create an IAM user or role with the following policy:\n")
+		fmt.Println()
+		fmt.Println("=== CloudAI-CLI AWS Setup Guide ===")
+		fmt.Println()
+		fmt.Println("1. Create an IAM user or role with the following policy:")
 		fmt.Println(`{
   "Version": "2012-10-17",
   "Statement": [
@@ -125,7 +127,8 @@ This command will now verify your credentials by listing your Lambda functions.`
 		fmt.Println("- AWS CLI profile: aws configure --profile cloudai")
 		fmt.Println("- Environment variables: export AWS_ACCESS_KEY_ID=...; export AWS_SECRET_ACCESS_KEY=...; export AWS_DEFAULT_REGION=us-east-1")
 		fmt.Println("\n3. (Optional) Set your default region in ~/.aws/config or via AWS_DEFAULT_REGION.")
-		fmt.Println("\nVerifying your AWS credentials by listing Lambda functions...\n")
+		fmt.Println()
+		fmt.Println("Verifying your AWS credentials by listing Lambda functions...")
 
 		ctx := context.Background()
 		awsClient, err := aws.NewClient(ctx)
@@ -141,7 +144,7 @@ This command will now verify your credentials by listing your Lambda functions.`
 			return err
 		}
 		fmt.Printf("✅ Success! Found %d Lambda functions.\n", len(resp.Functions))
-		fmt.Println("CloudAI-CLI is ready to use!\n")
+		fmt.Println("CloudAI-CLI is ready to use!")
 		return nil
 	},
 }
@@ -154,7 +157,9 @@ var listModelsCmd = &cobra.Command{
 This helps you see what models are available before enabling them.
 Models marked as "Available" can be enabled for use.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("\n📋 Available Bedrock Models\n")
+		fmt.Println()
+		fmt.Println("📋 Available Bedrock Models")
+		fmt.Println()
 
 		ctx := context.Background()
 		cfg, err := config.LoadDefaultConfig(ctx)
@@ -232,7 +237,9 @@ It will:
 
 This completely automates the Bedrock setup process.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("\n🔧 AWS Bedrock Setup Assistant\n")
+		fmt.Println()
+		fmt.Println("🔧 AWS Bedrock Setup Assistant")
+		fmt.Println()
 
 		// Check AWS credentials
 		fmt.Println("1. Checking AWS credentials...")
@@ -559,7 +566,7 @@ This command will:
 3. List available models in Ollama and AWS
 4. Suggest the best model for your system`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("🤖 CloudAI-CLI Model Information\n")
+               fmt.Println("🤖 CloudAI-CLI Model Information")
 
 		// Detect system specs
 		specs, err := sysinfo.DetectSystemSpecs()
@@ -674,7 +681,7 @@ This command displays:
 - Number of requests made today
 - Cost per request statistics`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("💰 CloudAI-CLI Cost Information\n")
+		fmt.Println("💰 CloudAI-CLI Cost Information")
 
 		// Check if using AWS models
 		modelType := getConfigString("model.type")
