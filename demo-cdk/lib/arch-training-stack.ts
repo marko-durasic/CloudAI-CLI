@@ -172,7 +172,7 @@ def handler(event, context):
       },
       resourceConfig: {
         instanceCount: 1,
-        instanceType: new ec2.InstanceType('ml.m5.large'),
+        instanceType: new ec2.InstanceType('ml.g4dn.xlarge'),
         volumeSize: cdk.Size.gibibytes(30),
       },
       role: sagemakerExecRole,
