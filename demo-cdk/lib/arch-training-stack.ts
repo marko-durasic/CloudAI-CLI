@@ -138,11 +138,22 @@ def handler(event, context):
     bucket.grantReadWrite(sagemakerExecRole);
     sagemakerExecRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSageMakerFullAccess'));
 
+    const trainingImageUri = `763104351884.dkr.ecr.${this.region}.amazonaws.com/huggingface-pytorch-training:2.1.1-transformers4.39.1-gpu-py310-cu121-ubuntu20.04`;
+
     const trainingJobTask = new tasks.SageMakerCreateTrainingJob(this, 'CreateTrainingJob', {
       trainingJobName: sfn.JsonPath.stringAt('$$.Execution.Name'),
       algorithmSpecification: {
-        algorithmName: 'xgboost', // Placeholder built-in algorithm, replace with LLM fine-tune image as needed
+        trainingImage: tasks.DockerImage.fromRegistry(trainingImageUri),
         trainingInputMode: tasks.InputMode.FILE,
+      },
+      hyperparameters: {
+        "model_name_or_path": "tiiuae/falcon-7b-instruct",
+        "do_train": "True",
+        "num_train_epochs": "1",
+        "per_device_train_batch_size": "2",
+        "learning_rate": "2e-5",
+        "output_dir": "/opt/ml/model",
+        "logging_steps": "10"
       },
       inputDataConfig: [
         {
