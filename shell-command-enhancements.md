@@ -122,11 +122,14 @@ func (r *CommandRouter) selectModelTier(intent *CommandIntent, privacyLevel priv
 package training
 
 import (
+    "bytes"
     "context"
     "encoding/json"
     "fmt"
+    "strings"
     "time"
 
+    "github.com/aws/aws-sdk-go-v2/aws"
     "github.com/aws/aws-sdk-go-v2/service/sagemaker"
     "github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -146,7 +149,8 @@ type TrainingConfig struct {
     TrainingInstanceCount int
     VolumeSize           int
     MaxRuntimeInSeconds  int
-    OutputPath           string
+    OutputPath           string  // Full S3 URI for SageMaker output (e.g., "s3://my-bucket/training-output/")
+    TrainingDataBucket   string  // S3 bucket name for training data storage
     HyperParameters      map[string]string
 }
 
@@ -237,7 +241,7 @@ func (t *SageMakerTrainer) prepareTrainingData(ctx context.Context, data *Archit
     }
 
     _, err = t.s3Client.PutObject(ctx, &s3.PutObjectInput{
-        Bucket: aws.String(t.config.OutputPath),
+        Bucket: aws.String(t.config.TrainingDataBucket),
         Key:    aws.String(s3Key),
         Body:   bytes.NewReader(jsonData),
     })
@@ -245,7 +249,7 @@ func (t *SageMakerTrainer) prepareTrainingData(ctx context.Context, data *Archit
         return "", fmt.Errorf("failed to upload training data: %w", err)
     }
 
-    return fmt.Sprintf("s3://%s/%s", t.config.OutputPath, s3Key), nil
+    return fmt.Sprintf("s3://%s/%s", t.config.TrainingDataBucket, s3Key), nil
 }
 
 func (t *SageMakerTrainer) convertToTrainingExamples(data *ArchitectureTrainingData) []TrainingExample {
@@ -283,6 +287,38 @@ type TrainingExample struct {
     Input    string                 `json:"input"`
     Output   string                 `json:"output"`
     Metadata map[string]interface{} `json:"metadata"`
+}
+
+// NewSageMakerTrainer creates a new SageMakerTrainer with proper configuration
+func NewSageMakerTrainer() *SageMakerTrainer {
+    // This would be called from the actual implementation
+    return &SageMakerTrainer{
+        // Initialize AWS clients
+        // Set up configuration
+    }
+}
+
+// SetConfig sets the training configuration
+func (t *SageMakerTrainer) SetConfig(config *TrainingConfig) {
+    t.config = config
+}
+
+// NewTrainingConfig creates a properly configured TrainingConfig
+// 
+// IMPORTANT: This fixes a previous bug where OutputPath was used inconsistently:
+// - OutputPath should be a full S3 URI for SageMaker's output configuration
+// - TrainingDataBucket should be just the bucket name for uploading training data
+// 
+// This separation ensures that:
+// 1. SageMaker training jobs receive the correct full S3 URI for model output
+// 2. Training data uploads use the correct bucket name
+// 3. The configuration is consistent and won't cause job failures
+func NewTrainingConfig(trainingDataBucket, outputPath string) *TrainingConfig {
+    return &TrainingConfig{
+        TrainingDataBucket: trainingDataBucket,  // Just the bucket name (e.g., "my-training-bucket")
+        OutputPath:         outputPath,          // Full S3 URI (e.g., "s3://my-training-bucket/model-output/")
+        // Other fields would be set based on requirements
+    }
 }
 ```
 
@@ -405,6 +441,15 @@ Training typically takes 30-60 minutes and costs $10-50 depending on data size.`
 
             // Start training
             trainer := training.NewSageMakerTrainer()
+            
+            // Configure training with proper S3 paths
+            // Note: TrainingDataBucket is just the bucket name, OutputPath is the full S3 URI
+            trainingConfig := training.NewTrainingConfig(
+                "my-training-bucket",                           // Training data bucket name
+                "s3://my-training-bucket/model-output/",       // Full S3 URI for model output
+            )
+            trainer.SetConfig(trainingConfig)
+            
             if background {
                 go func() {
                     if err := trainer.TrainCustomModel(context.Background(), trainingData); err != nil {
@@ -566,6 +611,8 @@ sagemaker:
   training_schedule: "weekly"
   model_version: "v1.0.0"
   training_job_role: "arn:aws:iam::123456789012:role/SageMakerTrainingRole"
+  training_data_bucket: "my-training-bucket"
+  output_path: "s3://my-training-bucket/model-output/"
   
 privacy:
   default_sanitization: "medium"
