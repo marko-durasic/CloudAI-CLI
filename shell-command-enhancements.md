@@ -303,21 +303,35 @@ func (t *SageMakerTrainer) SetConfig(config *TrainingConfig) {
     t.config = config
 }
 
-// NewTrainingConfig creates a properly configured TrainingConfig
+// NewTrainingConfig creates a properly configured TrainingConfig with all required fields initialized
 // 
-// IMPORTANT: This fixes a previous bug where OutputPath was used inconsistently:
-// - OutputPath should be a full S3 URI for SageMaker's output configuration
-// - TrainingDataBucket should be just the bucket name for uploading training data
+// IMPORTANT: This fixes the bug where only TrainingDataBucket and OutputPath were initialized.
+// All other required fields are now properly initialized with reasonable defaults.
 // 
-// This separation ensures that:
-// 1. SageMaker training jobs receive the correct full S3 URI for model output
-// 2. Training data uploads use the correct bucket name
-// 3. The configuration is consistent and won't cause job failures
+// BEFORE (Bug): Only TrainingDataBucket and OutputPath were set, causing SageMaker CreateTrainingJob to fail
+// AFTER (Fixed): All required fields are initialized with sensible defaults
 func NewTrainingConfig(trainingDataBucket, outputPath string) *TrainingConfig {
+    timestamp := time.Now().Format("2006-01-02-15-04-05")
+    
     return &TrainingConfig{
-        TrainingDataBucket: trainingDataBucket,  // Just the bucket name (e.g., "my-training-bucket")
-        OutputPath:         outputPath,          // Full S3 URI (e.g., "s3://my-training-bucket/model-output/")
-        // Other fields would be set based on requirements
+        ModelName:              fmt.Sprintf("cloudai-architecture-model-%s", timestamp),
+        TrainingJobName:        fmt.Sprintf("cloudai-training-job-%s", timestamp),
+        RoleArn:               "arn:aws:iam::123456789012:role/SageMakerTrainingRole", // Default role ARN (should be configured)
+        TrainingImage:         "382416733822.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest", // Default XGBoost image
+        TrainingInstanceType:  "ml.m5.large",
+        TrainingInstanceCount: 1,
+        VolumeSize:           30, // GB
+        MaxRuntimeInSeconds:  3600, // 1 hour
+        TrainingDataBucket:   trainingDataBucket,  // Just the bucket name (e.g., "my-training-bucket")
+        OutputPath:           outputPath,          // Full S3 URI (e.g., "s3://my-training-bucket/model-output/")
+        HyperParameters: map[string]string{
+            "objective":        "reg:squarederror",
+            "num_round":        "100",
+            "max_depth":        "6",
+            "eta":              "0.3",
+            "subsample":        "1.0",
+            "colsample_bytree": "1.0",
+        },
     }
 }
 ```
