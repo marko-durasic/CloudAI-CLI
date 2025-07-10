@@ -1,6 +1,9 @@
-THIS SHOULD BE A LINTER ERRORpackage llm
+package llm
 
-import "fmt"
+import (
+    "fmt"
+    "os"
+)
 
 // NewArchClientFromEnv attempts to construct a specialised architecture model
 // client (usually a SageMaker endpoint fine-tuned on your infra docs) based on
@@ -12,13 +15,19 @@ import "fmt"
 // If CLOUDAI_ARCH_ENDPOINT is not set the function returns (nil, nil) so callers
 // can treat the absence of a specialised model as non-fatal.
 func NewArchClientFromEnv() (*Client, error) {
-    endpoint := getenv("CLOUDAI_ARCH_ENDPOINT", "")
+    endpoint := os.Getenv("CLOUDAI_ARCH_ENDPOINT")
     if endpoint == "" {
         return nil, nil
     }
 
-    region := getenv("CLOUDAI_ARCH_REGION", "us-east-1")
-    modelID := getenv("CLOUDAI_ARCH_MODEL_ID", "arch-bot")
+    region := os.Getenv("CLOUDAI_ARCH_REGION")
+    if region == "" {
+        region = "us-east-1"
+    }
+    modelID := os.Getenv("CLOUDAI_ARCH_MODEL_ID")
+    if modelID == "" {
+        modelID = "arch-bot"
+    }
 
     cfg := &AWSModelConfig{
         Type:         AWSModelSageMaker,
