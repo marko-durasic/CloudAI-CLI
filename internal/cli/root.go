@@ -853,15 +853,22 @@ func runQuery(cmd *cobra.Command, args []string) error {
 	}
 	contextString := string(contextBytes)
 
-	// 3. Initialize the LLM client
-	llmClient, err := llm.NewClient()
+	// 3. Initialize LLM clients (general + architecture-aware) and router
+	generalClient, err := llm.NewClient()
 	if err != nil {
-		return fmt.Errorf("could not initialize LLM client: %w", err)
+		return fmt.Errorf("could not initialize general LLM client: %w", err)
 	}
 
-	// 4. Ask the LLM to answer the question using the provided context
-	fmt.Println("Asking AI to reason about your infrastructure...")
-	answer, err := llmClient.Answer(ctx, userQuery, contextString)
+	archClient, err := llm.NewArchClientFromEnv() // may return nil if not configured
+	if err != nil {
+		return fmt.Errorf("failed to create architecture model client: %w", err)
+	}
+
+	router := llm.NewRouter(archClient, generalClient)
+
+	// 4. Ask the router to answer the question using the provided context
+	fmt.Println("Asking AI to reason about your infrastructure (multi-model)...")
+	answer, err := router.Answer(ctx, userQuery, contextString)
 	if err != nil {
 		return fmt.Errorf("AI failed to answer the question: %w", err)
 	}
