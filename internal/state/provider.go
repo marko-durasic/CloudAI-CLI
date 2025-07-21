@@ -25,7 +25,7 @@ func (p *IaCProvider) Scan(ctx context.Context, path string) (map[string]interfa
 
 	// TODO: Add CloudFormation and Terraform file checks here
 
-	return nil, fmt.Errorf("no supported IaC files found in %s", path)
+	return nil, fmt.Errorf("no supported IaC files found in %s\n\nFor CDK projects: run 'cdk synth' first to generate cdk.out/ directory\nFor other projects: ensure you have .tf, .yaml, or .json template files", path)
 }
 
 func (p *IaCProvider) scanCdk(cdkOutPath string) (map[string]interface{}, error) {

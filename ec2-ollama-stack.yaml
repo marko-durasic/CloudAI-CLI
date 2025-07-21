@@ -68,7 +68,7 @@ Resources:
   OllamaInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0f6d76bf212f00b86  # Ubuntu 22.04 LTS us-west-2
+      ImageId: !Sub '{{resolve:ssm:/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id}}'
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyPairName
       SecurityGroupIds:
