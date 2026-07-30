@@ -8,7 +8,7 @@ export class CloudaiDemoCdkStack extends cdk.Stack {
 
     const demoLambda = new lambda.Function(this, 'DemoLambda', {
       functionName: 'cloudai-demo-hello',
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromInline(`
         exports.handler = async (event) => {
