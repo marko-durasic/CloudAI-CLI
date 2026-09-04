@@ -1,15 +1,15 @@
-name: Release
+name: CI
 
 on:
   push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: write
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  goreleaser:
+  test-and-verify:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,7 +22,10 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Build snapshot for version verification
+      - name: Run Go tests
+        run: go test -v ./...
+
+      - name: Build snapshot with GoReleaser
         uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
           distribution: goreleaser
@@ -33,13 +36,3 @@ jobs:
 
       - name: Verify binary version ldflags
         run: ./scripts/verify-version.sh
-
-      - name: Run GoReleaser (Publish)
-        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
-        with:
-          distribution: goreleaser
-          version: 'v2.7.0'
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
