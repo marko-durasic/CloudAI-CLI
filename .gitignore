@@ -11,4 +11,8 @@ demo-cdk/node_modules/
 demo-cdk/cdk.out/
 
 # CloudAI cache
-.cloudai/ 
+.cloudai/
+
+# Distribution build output
+dist/
+ 
