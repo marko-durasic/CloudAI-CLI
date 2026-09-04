@@ -9,8 +9,10 @@ Download the latest binary for your operating system and architecture from [GitH
 
 **Linux / macOS (curl example):**
 ```bash
-# Download the appropriate archive for your OS/architecture (linux/darwin, amd64/arm64)
-# Example for Linux (amd64):
+# Released assets (exact filenames):
+#   cloudai_Linux_x86_64.tar.gz    cloudai_Linux_arm64.tar.gz
+#   cloudai_Darwin_x86_64.tar.gz   cloudai_Darwin_arm64.tar.gz
+# Example for Linux on x86_64:
 curl -sSL https://github.com/marko-durasic/CloudAI-CLI/releases/latest/download/cloudai_Linux_x86_64.tar.gz | tar -xz cloudai
 sudo mv cloudai /usr/local/bin/
 
