@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
-	"github.com/ddjura/cloudai/internal/llm"
+	"github.com/marko-durasic/CloudAI-CLI/internal/llm"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -1,4 +1,4 @@
-module github.com/ddjura/cloudai
+module github.com/marko-durasic/CloudAI-CLI
 
 go 1.24.0
 

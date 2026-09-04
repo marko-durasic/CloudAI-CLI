@@ -2,20 +2,47 @@
 
 CloudAI-CLI is a single-binary Go tool that turns plain-English prompts into AWS SDK calls, revealing live infrastructure topology and high-level cost drivers.
 
-## 🚀 Quick Start
+## 🚀 Installation & Quick Start
 
-### 1. Install CloudAI-CLI Globally
+### 📥 1. Download Pre-compiled Binary (Recommended)
+Download the latest binary for your operating system and architecture from [GitHub Releases](https://github.com/marko-durasic/CloudAI-CLI/releases).
+
+**Linux / macOS (curl example):**
 ```bash
-# Clone and install
-git clone https://github.com/marko-durasic/CloudAI-CLI.git
-cd CloudAI-CLI
-go install ./cmd/cloudai
+# Released assets (exact filenames):
+#   cloudai_Linux_x86_64.tar.gz    cloudai_Linux_arm64.tar.gz
+#   cloudai_Darwin_x86_64.tar.gz   cloudai_Darwin_arm64.tar.gz
+# Example for Linux on x86_64:
+curl -sSL https://github.com/marko-durasic/CloudAI-CLI/releases/latest/download/cloudai_Linux_x86_64.tar.gz | tar -xz cloudai
+sudo mv cloudai /usr/local/bin/
 
 # Verify installation
-cloudai --help
+cloudai version
 ```
 
-### 2. Interactive Setup (NEW!)
+### 📦 2. Install via `go install`
+If you have Go installed (1.24+):
+```bash
+go install github.com/marko-durasic/CloudAI-CLI/cmd/cloudai@latest
+
+# Verify installation
+cloudai version
+```
+
+### 🛠️ 3. Build from Source
+```bash
+# Clone repository
+git clone https://github.com/marko-durasic/CloudAI-CLI.git
+cd CloudAI-CLI
+
+# Build binary
+go build -o cloudai ./cmd/cloudai
+
+# Verify installation
+./cloudai version
+```
+
+### 4. Interactive Setup (NEW!)
 ```bash
 cloudai setup-interactive
 ```
@@ -28,7 +55,7 @@ Choose from **6 deployment options**:
 - **Option 5**: Privacy Remote API (Hybrid)
 - **Option 6**: Privacy CLI Tools (Hybrid)
 
-### 3. Scan Your Infrastructure
+### 5. Scan Your Infrastructure
 Navigate to your project directory and scan your Infrastructure as Code files:
 
 ```bash
@@ -54,7 +81,7 @@ cloudai scan
 - You must run `cdk synth` to generate the `cdk.out/` directory first
 - Just having deployed infrastructure isn't enough - need local compilation
 
-### 4. Ask Questions
+### 6. Ask Questions
 From the same project directory, ask questions about your infrastructure:
 
 ```bash
