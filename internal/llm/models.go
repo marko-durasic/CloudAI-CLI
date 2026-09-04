@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/ddjura/cloudai/internal/sysinfo"
+	"github.com/marko-durasic/CloudAI-CLI/internal/sysinfo"
 )
 
 // ModelInfo represents information about a model

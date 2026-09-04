@@ -9,9 +9,9 @@ import (
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/ddjura/cloudai/internal/aws"
-	"github.com/ddjura/cloudai/internal/llm"
-	"github.com/ddjura/cloudai/internal/output"
+	"github.com/marko-durasic/CloudAI-CLI/internal/aws"
+	"github.com/marko-durasic/CloudAI-CLI/internal/llm"
+	"github.com/marko-durasic/CloudAI-CLI/internal/output"
 )
 
 // Processor handles query processing

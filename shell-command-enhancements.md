@@ -18,9 +18,9 @@ import (
     "strings"
     "time"
 
-    "github.com/ddjura/cloudai/internal/llm"
-    "github.com/ddjura/cloudai/internal/privacy"
-    "github.com/ddjura/cloudai/internal/training"
+    "github.com/marko-durasic/CloudAI-CLI/internal/llm"
+    "github.com/marko-durasic/CloudAI-CLI/internal/privacy"
+    "github.com/marko-durasic/CloudAI-CLI/internal/training"
 )
 
 type CommandRouter struct {
@@ -348,8 +348,8 @@ import (
     "strings"
     "time"
 
-    "github.com/ddjura/cloudai/internal/routing"
-    "github.com/ddjura/cloudai/internal/privacy"
+    "github.com/marko-durasic/CloudAI-CLI/internal/routing"
+    "github.com/marko-durasic/CloudAI-CLI/internal/privacy"
     "github.com/spf13/cobra"
 )
 

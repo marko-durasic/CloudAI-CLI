@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/ddjura/cloudai/internal/version"
+	"github.com/marko-durasic/CloudAI-CLI/internal/version"
 	"github.com/spf13/cobra"
 )
 

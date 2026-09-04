@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ddjura/cloudai/internal/cli"
+	"github.com/marko-durasic/CloudAI-CLI/internal/cli"
 )
 
 func main() {
