@@ -174,6 +174,7 @@ deploy_cpu_instance() {
         --parameter-overrides \
             KeyPairName=$KEY_NAME \
             InstanceType=t3.medium \
+            AllowedCIDR="$CLOUDAI_ALLOWED_CIDR" \
         --capabilities CAPABILITY_IAM \
         --region $REGION
     
@@ -241,13 +242,15 @@ get_deployment_outputs() {
     
     PUBLIC_IP=$(echo $OUTPUTS | jq -r '.[] | select(.OutputKey=="PublicIP") | .OutputValue')
     OLLAMA_URL=$(echo $OUTPUTS | jq -r '.[] | select(.OutputKey=="OllamaURL") | .OutputValue')
-    SSH_CMD=$(echo $OUTPUTS | jq -r '.[] | select(.OutputKey=="SSHCommand") | .OutputValue')
+    SSH_CMD=$(echo "$OUTPUTS" | jq -r '.[] | select(.OutputKey=="SSHCommand") | .OutputValue')
+    SSH_TUNNEL=$(echo "$OUTPUTS" | jq -r '.[] | select(.OutputKey=="SSHTunnel") | .OutputValue')
     
     echo "🎉 Deployment Complete!"
     echo "=" + $(printf '%.0s=' {1..50})
     echo ""
-    echo "🌐 Ollama API URL: $OLLAMA_URL"
-    echo "🔗 SSH Command: $SSH_CMD"
+    echo "🔒 Local Ollama URL after SSH tunnel: $OLLAMA_URL"
+    echo "🔑 SSH Command: $SSH_CMD"
+    echo "🔐 On your trusted workstation run: $SSH_TUNNEL"
     echo ""
     echo "⏳ The instance is starting up and installing Ollama..."
     echo "   This takes about 5-10 minutes for full setup."
@@ -256,7 +259,8 @@ get_deployment_outputs() {
     echo "   export OLLAMA_URL=$OLLAMA_URL"
     echo "   cloudai setup-interactive  # Choose option 1 (Local models)"
     echo ""
-    echo "🧪 Test when ready:"
+    echo "   Keep the SSH tunnel running while using CloudAI-CLI."
+    echo "🧪 Test the local tunnel when ready:"
     echo "   curl $OLLAMA_URL/api/tags"
     echo ""
     echo "🗑️  To delete everything:"
@@ -276,6 +280,14 @@ if [ -z "$REGION" ]; then
     echo "🌍 No region set, using default: $REGION"
 else
     echo "🌍 Using region: $REGION"
+fi
+
+# Require a single trusted administrator IP; never deploy internet-accessible Ollama/SSH.
+if [[ ! "${CLOUDAI_ALLOWED_CIDR:-}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/32$ ]]; then
+    echo "❌ Set CLOUDAI_ALLOWED_CIDR to your workstation public IPv4/32."
+    echo '   Example: export CLOUDAI_ALLOWED_CIDR="203.0.113.10/32" (replace with your actual IP)'
+    echo "   Ollama is reached only by SSH tunnel, never via a public API endpoint."
+    exit 1
 fi
 
 # Check quotas before deployment
@@ -389,6 +401,7 @@ aws cloudformation deploy \
     --parameter-overrides \
         KeyPairName=$KEY_NAME \
         InstanceType=g4dn.xlarge \
+        AllowedCIDR="$CLOUDAI_ALLOWED_CIDR" \
     --capabilities CAPABILITY_IAM \
     --region $REGION
 
