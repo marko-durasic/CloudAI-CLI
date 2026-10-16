@@ -28,9 +28,12 @@ sudo systemctl restart docker
 # Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
 
-# Start Ollama service
+# Bind Ollama to localhost; remote users must connect over an SSH tunnel.
+sudo mkdir -p /etc/systemd/system/ollama.service.d
+printf '[Service]\nEnvironment="OLLAMA_HOST=127.0.0.1:11434"\n' | sudo tee /etc/systemd/system/ollama.service.d/override.conf >/dev/null
+sudo systemctl daemon-reload
 sudo systemctl enable ollama
-sudo systemctl start ollama
+sudo systemctl restart ollama
 
 # Wait for Ollama to start
 sleep 5
@@ -41,18 +44,19 @@ ollama pull llama3.2:3b      # Fast, good quality
 ollama pull phi3:mini        # Very fast, smaller
 ollama pull llama3.2:1b      # Fastest, basic quality
 
-# Configure firewall for remote access
-sudo ufw allow 11434/tcp
+# Firewall: allow SSH, do not expose the unauthenticated Ollama API.
+sudo ufw allow 22/tcp
 sudo ufw --force enable
 
 # Get instance IP
 INSTANCE_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 
 echo "✅ Setup complete!"
-echo "🌐 Ollama API URL: http://$INSTANCE_IP:11434"
-echo "🔧 To use with CloudAI-CLI:"
-echo "   export OLLAMA_URL=http://$INSTANCE_IP:11434"
+echo "🔐 From your trusted workstation, open an SSH tunnel:"
+echo "   ssh -N -L 11434:127.0.0.1:11434 ubuntu@$INSTANCE_IP"
+echo "🔧 In another terminal on that workstation:"
+echo "   export OLLAMA_URL=http://127.0.0.1:11434"
 echo "   cloudai setup-interactive"
 echo ""
 echo "💡 Test connection:"
-echo "   curl http://$INSTANCE_IP:11434/api/tags" 
+echo "   curl http://127.0.0.1:11434/api/tags" 
