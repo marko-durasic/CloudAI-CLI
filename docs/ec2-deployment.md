@@ -1,3 +1,32 @@
+> **Security update (2026-10-16):** Ollama has no authentication and must not be publicly exposed. The EC2 template now requires an explicit administrator IPv4 /32 for SSH and binds Ollama to localhost. Access it using an SSH tunnel.
+
+### Secure EC2 deployment
+
+From your administrator workstation, determine its public IPv4 and export the allowlist:
+
+```bash
+export CLOUDAI_ALLOWED_CIDR="$(curl -fsS https://checkip.amazonaws.com | tr -d '\n')/32"
+./deploy-ollama-ec2.sh
+```
+
+Verify the discovered address belongs to the intended workstation or VPN. The script refuses to deploy without a /32. Updating your IP later requires a deliberate SSH security-group allowlist change, never 0.0.0.0/0.
+
+After deployment, run the tunnel from the administrator workstation:
+
+```bash
+ssh -N -L 11434:127.0.0.1:11434 -i YOUR_KEY.pem ubuntu@YOUR_EC2_PUBLIC_IP
+```
+
+Use the local endpoint from a second workstation terminal:
+
+```bash
+export OLLAMA_URL=http://127.0.0.1:11434
+curl -fsS "$OLLAMA_URL/api/tags"
+```
+
+**Existing AWS deployments:** A source-code fix cannot close already-deployed security-group ingress or reconfigure a running Ollama instance. Inspect active stacks and security groups independently. Do not expose port 11434 to the internet.
+
+---
 # CloudAI-CLI EC2 Deployment Guide
 
 ## 🚀 **Smart Deployment with Quota Handling**
